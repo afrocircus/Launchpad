@@ -1,6 +1,7 @@
-__author__ = 'Nata'
+__author__ = 'Natasha Kelkar'
 
 import sys
+import collections
 
 from PyQt4 import QtGui, QtCore
 from widgets.taskWidget import TaskWidget
@@ -85,20 +86,35 @@ class LaunchPadGui(QtGui.QMainWindow):
 
         taskName = str(item.text())
         taskNameList = taskName.split('/')
-        infoDict = {}
-        infoDict['episode'] = taskNameList[0]
-        infoDict['sequence'] = taskNameList[1]
-        infoDict['shot'] = taskNameList[2]
-        infoDict['task'] = taskNameList[3]
+        infoDict = collections.OrderedDict()
+        if taskNameList[0] == 'Asset builds':
+            infoDict['asset'] = taskNameList[1]
+            infoDict['task'] = taskNameList[2]
+        else:
+            infoDict['episode'] = taskNameList[0]
+            infoDict['sequence'] = taskNameList[1]
+            infoDict['shot'] = taskNameList[2]
+            infoDict['task'] = taskNameList[3]
 
         for task in self.tasks:
             if task['taskName'] == taskName:
                 infoDict['priority'] = task['priority']
                 infoDict['status'] = task['status']
+                self.appWidget.projectDir = task['path']
+                if task.has_key('file'):
+                    infoDict['file'] = task['file']
+                else:
+                    infoDict['file'] = 'No file found'
                 break
 
         self.shotGroupBox.setVisible(True)
+        self.shotInfoWidget.clearLayout()
         self.shotInfoWidget.populateShotInfo(infoDict)
+
+        if infoDict['file'] == 'No file found':
+            self.appWidget.discover('')
+        else:
+            self.appWidget.discover(infoDict['file'])
         self.appGroupBox.setVisible(True)
 
 

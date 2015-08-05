@@ -1,4 +1,4 @@
-__author__ = 'Nata'
+__author__ = 'Natasha Kelkar'
 
 from PyQt4 import QtGui
 

@@ -1,10 +1,10 @@
-__author__ = 'Nata'
 
 import sys
 import os
 import re
 import logging
 import subprocess
+
 
 DEFAULT_VERSION_EXPRESSION = re.compile(
     r'(?P<version>\d[\d.vabc]*?)[^\d]*$'
@@ -73,21 +73,23 @@ class ApplicationStore(object):
                 expression=prefix + ['Autodesk', 'Maya.+', 'bin', 'maya.exe'],
                 label='Maya {version}',
                 applicationIdentifier='maya_{version}',
-                icon='widgets/images/maya_icon.png'
+                icon='widgets/images/maya_icon.png',
+                fileType= ['ma', 'mb']
             ))
 
             applications.extend(self._searchFilesystem(
                 expression=prefix + ['Hiero\d.+', 'hiero.exe'],
                 label='Hiero {version}',
                 applicationIdentifier='hiero_{version}',
-                icon='widgets/images/hiero_icon.png'
+                icon='widgets/images/hiero_icon.png',
+                fileType= ['ma', 'mb']
             ))
 
         return applications
 
     def _searchFilesystem(self, expression, label, applicationIdentifier,
                           versionExpression=None, icon=None,
-                          launchArguments=None):
+                          launchArguments=None, fileType=None):
         '''
         Return list of applications found in filesystem matching *expression*.
 
@@ -179,7 +181,8 @@ class ApplicationStore(object):
                                 'launchArguments': launchArguments,
                                 'version': version,
                                 'label': label.format(version=version),
-                                'icon': icon
+                                'icon': icon,
+                                'fileType': fileType
                             })
                         else:
                             self.logger.debug(
@@ -216,7 +219,7 @@ class ApplicationLauncher(object):
 
         self.applicationStore = applicationStore
 
-    def launch(self, applicationIdentifier):
+    def launch(self, applicationIdentifier, launchArguments):
         '''Launch application matching *applicationIdentifier*.
 
         *context* should provide information that can guide how to launch the
@@ -237,6 +240,7 @@ class ApplicationLauncher(object):
         application = self.applicationStore.getApplication(
             applicationIdentifierPattern
         )
+        application['launchArguments'] = launchArguments
 
         if application is None:
             return {
@@ -249,6 +253,7 @@ class ApplicationLauncher(object):
 
         # Construct command.
         command = self._getApplicationLaunchCommand(application)
+        print command
 
         success = True
         message = '{0} application started.'.format(application['label'])
@@ -274,6 +279,7 @@ class ApplicationLauncher(object):
             self.logger.debug(
                 'Launching {0} with options {1}'.format(command, options)
             )
+
             process = subprocess.Popen(command, **options)
 
         except (OSError, TypeError):
